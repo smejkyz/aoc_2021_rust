@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::utils::{benchmark_run, print_day, print_header};
 use std::fs;
 mod days;
@@ -8,6 +9,8 @@ macro_rules! benchmark_all {
         print_header();
         $(
         let input_path = format!("/Users/user/RustroverProjects/aoc2021/src/inputs/{}.in", &stringify!($day).to_string()[1..]);
+        //let input_path = "/Users/user/RustroverProjects/aoc2021/src/inputs/08.in";
+        println!("{}", input_path);
         let raw_input = fs::read_to_string(input_path).unwrap();
         let p1_duration = benchmark_run(days::$day::p1, &raw_input);
         let p2_duration = benchmark_run(days::$day::p2, &raw_input);
@@ -19,5 +22,5 @@ macro_rules! benchmark_all {
 
 fn main() {
     //let a = vec![16, 1, 2, 0, 4, 2, 7, 1, 2, 14];
-    benchmark_all!(d01, d02, d07);
+    benchmark_all!(d01,d07,d08);
 }
