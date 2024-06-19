@@ -1,4 +1,5 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
+use bstr::Chars;
 use itertools::Itertools;
 
 pub fn p1(raw_input: &str) -> i32{
@@ -18,39 +19,30 @@ pub fn p1(raw_input: &str) -> i32{
     solution
 }
 
-pub fn dep_p1(raw_input: &str) -> i32{
-        let mut solution = 0;
-        for line in raw_input.lines(){
-            //let x: Vec<bool> = line.split("|").last().unwrap().split(" ").map(|item|has_correct_size(item.len())).collect();
-            let x: i32 = line.split("|").last().unwrap().split(" ").map(|item|has_correct_size(item.len()) as i32).sum();
-            solution += x;
-        //println!("tmp");
-    }
-    println!("solution: {}", solution);
-    solution
-}
 
 pub fn p2(raw_input: &str) -> i32{
     let map_positions_to_int = create_map();
-    let mut result = 0;
-    for line in raw_input.lines(){
-        let split_vector: Vec<&str> = line.split(" | ").collect();
-        let first_part = split_vector[0];
-        let second_part =split_vector[1];
-        let result_map = create_result_map(first_part);
-        let mut per_line_result: Vec<i32> = Vec::new();
-        for coded in second_part.split(" "){
-            let decoded = decode_string(coded, result_map.clone(), map_positions_to_int.clone());
-            per_line_result.push(decoded)
-        }
-        let line_result = per_line_result.iter().join("").parse::<i32>().unwrap();
-        result += line_result;
-    }
-    //println!("in works, result {}", result);
+
+    let result = raw_input
+        .lines()
+        .map(|line| p2_per_line(line))
+        .sum();
+    assert_eq!(result, 1011785);
     result
 }
 
-fn decode_string(input_str: &str, result_map: HashMap<char, i32>, map_positions_to_int: HashMap<BTreeSet<i32>, i32>) -> i32 {
+fn p2_per_line(raw_line: &str) -> i32{
+    let (first_part, second_part) = raw_line.split_once(" | ").unwrap();
+    let result_map = create_result_map(first_part);
+    second_part
+        .split(" ")
+        .map(|coded| decode_string(coded, &result_map))
+        .join("")
+        .parse::<i32>()
+        .unwrap()
+}
+
+fn decode_string(input_str: &str, result_map: &Vec<HashSet<char>>) -> i32 {
     if input_str.len() == 2{
         return 1;
     }
@@ -63,102 +55,92 @@ fn decode_string(input_str: &str, result_map: HashMap<char, i32>, map_positions_
     if input_str.len() == 7{
         return 8;
     }
-    let mut int_representation: BTreeSet<i32> = BTreeSet::new();
+    let mut set: HashSet<char> = HashSet::new();
     for c in input_str.chars() {
-        let int_value = result_map[&c];
-        int_representation.insert(int_value);
+        set.insert(c);
     }
-    map_positions_to_int[&int_representation]
+    let position = result_map.iter().position(|item| item == &set).unwrap();
+    position as i32
 }
 
-fn create_result_map(input: &str) -> HashMap<char, i32>{
+fn create_result_map(input: &str) -> Vec<HashSet<char>>{
+    let mut _input_data = create_input_data(input);
+    let (one, seven, four, eight) = find_given_length(&mut _input_data);
 
-    let _input_data = create_input_data(input);
-    let one = find_for_given_length(&_input_data, 2);
-    let seven = find_for_given_length(&_input_data, 3);
-    let four = find_for_given_length(&_input_data, 4);
-    let zero_or_six_or_nine = find_zero_or_six_or_nine(&_input_data);
+    //nine - has len 6 and 4 is subset
+    let nine = find_nine(&mut _input_data, &four);
+    let zero = find_zero(&mut _input_data, &one);
+    let six = find_six(&mut _input_data);
 
-    // main algorithm
-    let top_position: HashSet<_> = seven.difference(&one).clone().copied().collect();
-    assert_eq!(top_position.len(), 1);
+    // remaining 5 and 2 and 3:
+    let three = find_three(&mut _input_data, &seven);
+    let five = find_five(&mut _input_data, &six);
+    let two = _input_data[0].clone();
 
-    let mut position_top_right: HashSet<_> = seven.intersection(&one).clone().copied().collect();
-    let mut position_bottom_right: HashSet<_> = seven.intersection(&one).clone().copied().collect();
-    // 3. set possible positions on left - that are in four and not in seven
-    let mut position_top_left: HashSet<_> = four.difference(&seven).clone().copied().collect();
-    let mut position_middle: HashSet<_> = four.difference(&seven).clone().copied().collect();
+    vec![zero, one, two, three, four, five, six, seven, eight, nine]
+}
 
-    // 4. look at the common at zero_six_nine
-    let help: HashSet<_> = zero_or_six_or_nine[0].intersection(&zero_or_six_or_nine[1]).clone().copied().collect();
-    let mut common_len_6: HashSet<_> = help.intersection(&zero_or_six_or_nine[2]).clone().copied().collect();
-    // # 5. discard the top
-    common_len_6.remove(&top_position.iter().collect::<Vec<_>>()[0]);
+fn find_given_length(p0: &mut Vec<HashSet<char>>) -> (HashSet<char>, HashSet<char>, HashSet<char>, HashSet<char>){
+    let index_one = p0.iter().position(|item| item.len() == 2).unwrap();
+    let one = p0[index_one].clone();
+    p0.remove(index_one);
 
-    // 6. now we can set positions 1 and 3. We should have two choices - one choice is in the common_len_6, the other is not
-    // since 0 does not have middle position 3
-    position_top_left = common_len_6.intersection(&position_top_left).clone().copied().collect();
-    assert_eq!(position_top_left.len(), 1);
-    // # 7. update the result_map:
-    position_middle = position_middle.difference(&position_top_left).clone().copied().collect();
+    let index_seven = p0.iter().position(|item| item.len() == 3).unwrap();
+    let seven = p0[index_seven].clone();
+    p0.remove(index_seven);
 
-    // 8. update common:
-    common_len_6.remove(&position_top_left.iter().collect::<Vec<_>>()[0]);
-    assert_eq!(common_len_6.len(), 2);
+    let index_four = p0.iter().position(|item| item.len() == 4).unwrap();
+    let four = p0[index_four].clone();
+    p0.remove(index_four);
 
-    // 9. common_len_5 has 2 elements one has intersection with 7 and does not
-    // the intersection has to be position right_bottom
-    position_bottom_right = position_bottom_right.intersection(&common_len_6).clone().copied().collect();
-    assert_eq!(position_bottom_right.len(), 1);
-    // # update result_map
-    position_top_right = position_top_right.difference(&position_bottom_right).clone().copied().collect();
-    //
-    // # update common
-    common_len_6.remove(&position_bottom_right.iter().collect::<Vec<_>>()[0]);
-    assert_eq!(common_len_6.len(), 1);
+    let index_eight = p0.iter().position(|item| item.len() == 7).unwrap();
+    let eight = p0[index_eight].clone();
+    p0.remove(index_eight);
 
-    // last value in common_len_6 has to be the bottom:
-    let position_bottom = common_len_6;
-    // last unknown position is 4 - the remaining
-    let mut union_set: HashSet<char> = HashSet::new();
-    union_set.extend(top_position.iter());
-    union_set.extend(position_top_left.iter());
-    union_set.extend(position_top_right.iter());
-    union_set.extend(position_middle.iter());
-    union_set.extend(position_bottom_right.iter());
-    union_set.extend(position_bottom.iter());
-    let all_positions: HashSet<char> = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].iter().cloned().collect();
-    let position_bottom_left: HashSet<_>  = all_positions.difference(&union_set).clone().copied().collect();
+    (one, seven, four, eight)
+}
 
-    let mut result: HashMap<char, i32> = HashMap::new();
-    // Populate the HashMap
-    result.insert(top_position.iter().clone().copied().collect::<Vec<_>>()[0], 0);
-    result.insert(position_top_left.iter().clone().copied().collect::<Vec<_>>()[0], 1);
-    result.insert(position_top_right.iter().clone().copied().collect::<Vec<_>>()[0], 2);
-    result.insert(position_middle.iter().clone().copied().collect::<Vec<_>>()[0], 3);
-    result.insert(position_bottom_left.iter().clone().copied().collect::<Vec<_>>()[0], 4);
-    result.insert(position_bottom_right.iter().clone().copied().collect::<Vec<_>>()[0], 5);
-    result.insert(position_bottom.iter().clone().copied().collect::<Vec<_>>()[0], 6);
+// fn find_for_given_length(p0: &Vec<HashSet<char>>, given_length: usize) -> HashSet<char>{
+//     if let Some(word) = p0.iter().find(| &data| data.len() == given_length){
+//         return word.clone()
+//     }else{
+//         unreachable!("This else branch should never be reached");
+//     }
+// }
+
+fn find_nine(p0: &mut Vec<HashSet<char>>, four: &HashSet<char>) -> HashSet<char>{
+    let index = p0.iter().position(|item| item & &four == *four && item.len() == 6).unwrap();
+    let result = p0[index].clone();
+    p0.remove(index);
     result
 }
 
-fn find_zero_or_six_or_nine(p0: &Vec<HashSet<char>>) -> Vec<HashSet<char>> {
-    let mut result: Vec<HashSet<char>> = Vec::new();
-    for element in p0{
-        if element.len() == 6{
-            result.push(element.clone());
-        }
-    }
+fn find_zero(p0: &mut Vec<HashSet<char>>, one: &HashSet<char>) -> HashSet<char>{
+    let index = p0.iter().position(|item|  item & &one == *one && item.len() == 6).unwrap();
+    let result = p0[index].clone();
+    p0.remove(index);
     result
-
 }
 
-fn find_for_given_length(p0: &Vec<HashSet<char>>, given_length: usize) -> HashSet<char>{
-    if let Some(word) = p0.iter().find(| &data| data.len() == given_length){
-        return word.clone()
-    }else{
-        unreachable!("This else branch should never be reached");
-    }
+fn find_six(p0: &mut Vec<HashSet<char>>) -> HashSet<char>{
+    let index = p0.iter().position(|item| item.len() == 6).unwrap();
+    let result = p0[index].clone();
+    p0.remove(index);
+    result
+}
+
+fn find_three(p0: &mut Vec<HashSet<char>>, seven: &HashSet<char>) -> HashSet<char>{
+    let index = p0.iter().position(|item| item & &seven == *seven).unwrap();
+    let result = p0[index].clone();
+    p0.remove(index);
+    result
+}
+
+fn find_five(p0: &mut Vec<HashSet<char>>, six: &HashSet<char>) -> HashSet<char>{
+    let index = p0.iter().position(|item| item & &six == *item).unwrap();
+    let result = p0[index].clone();
+    p0.remove(index);
+    result
 }
 
 fn create_input_data(input: &str) -> Vec<HashSet<char>>{
