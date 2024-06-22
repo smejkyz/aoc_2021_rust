@@ -21,8 +21,6 @@ pub fn p1(raw_input: &str) -> i32{
 
 
 pub fn p2(raw_input: &str) -> i32{
-    let map_positions_to_int = create_map();
-
     let result = raw_input
         .lines()
         .map(|line| p2_per_line(line))
@@ -42,7 +40,7 @@ fn p2_per_line(raw_line: &str) -> i32{
         .unwrap()
 }
 
-fn decode_string(input_str: &str, result_map: &Vec<HashSet<char>>) -> i32 {
+fn decode_string(input_str: &str, result_map: &Vec<HashSet<char>>) -> usize{
     if input_str.len() == 2{
         return 1;
     }
@@ -59,8 +57,7 @@ fn decode_string(input_str: &str, result_map: &Vec<HashSet<char>>) -> i32 {
     for c in input_str.chars() {
         set.insert(c);
     }
-    let position = result_map.iter().position(|item| item == &set).unwrap();
-    position as i32
+    result_map.iter().position(|item| item == &set).unwrap()
 }
 
 fn create_result_map(input: &str) -> Vec<HashSet<char>>{
@@ -155,19 +152,19 @@ fn create_input_data(input: &str) -> Vec<HashSet<char>>{
     _input_data
 }
 
-fn create_map() -> HashMap<BTreeSet<i32>, i32>{
-    let mut map_positions_to_int: HashMap<BTreeSet<i32>, i32> = HashMap::new();
-
-    // Populate the HashMap
-    map_positions_to_int.insert([0, 1, 4, 6, 5, 2].iter().cloned().collect(), 0);
-    map_positions_to_int.insert([0, 2, 3, 4, 6].iter().cloned().collect(), 2);
-    map_positions_to_int.insert([0, 2, 3, 5, 6].iter().cloned().collect(), 3);
-    map_positions_to_int.insert([0, 1, 3, 5, 6].iter().cloned().collect(), 5);
-    map_positions_to_int.insert([0, 1, 4, 6, 5, 3].iter().cloned().collect(), 6);
-    map_positions_to_int.insert([0, 1, 3, 2, 5, 6].iter().cloned().collect(), 9);
-
-    map_positions_to_int
-}
+// fn create_map() -> HashMap<BTreeSet<i32>, i32>{
+//     let mut map_positions_to_int: HashMap<BTreeSet<i32>, i32> = HashMap::new();
+//
+//     // Populate the HashMap
+//     map_positions_to_int.insert([0, 1, 4, 6, 5, 2].iter().cloned().collect(), 0);
+//     map_positions_to_int.insert([0, 2, 3, 4, 6].iter().cloned().collect(), 2);
+//     map_positions_to_int.insert([0, 2, 3, 5, 6].iter().cloned().collect(), 3);
+//     map_positions_to_int.insert([0, 1, 3, 5, 6].iter().cloned().collect(), 5);
+//     map_positions_to_int.insert([0, 1, 4, 6, 5, 3].iter().cloned().collect(), 6);
+//     map_positions_to_int.insert([0, 1, 3, 2, 5, 6].iter().cloned().collect(), 9);
+//
+//     map_positions_to_int
+// }
 
 fn has_correct_size(value: usize) -> bool{
     let given_lens = vec![2,3,4,7];
