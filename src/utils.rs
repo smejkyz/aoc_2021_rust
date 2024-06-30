@@ -1,3 +1,4 @@
+use itertools::Itertools;
 
 const W_DAY: usize = 10;
 const W_PART: usize = 10;
@@ -63,6 +64,14 @@ impl Array2D {
 
     pub fn get_rows(&self) -> usize{
         self.rows
+    }
+
+    pub fn get_row(&self, row: usize) -> Vec<i32>{
+        self.data[row].clone()
+    }
+
+    pub fn get_column(&self, col: usize) -> Vec<i32>{
+        self.data.iter().map(|row| row[col]).collect()
     }
 
     pub fn get_cols(&self) -> usize{
@@ -133,6 +142,31 @@ impl Array2D {
         for row in &self.data {
             println!("{:?}", row);
         }
+    }
+
+    pub fn replace(&mut self, replaced_number: i32, replace_with: i32){
+        for (i, j) in (0..self.rows).cartesian_product(0..self.cols){
+            if self.get(i, j) == replaced_number{
+                &self.set(i, j, replace_with);
+            }
+        }
+    }
+    pub fn count(&self, number_of_interest: i32) -> i32{
+        let mut _count = 0;
+        for (i, j) in (0..self.rows).cartesian_product(0..self.cols){
+            if self.get(i, j) == number_of_interest{
+                _count += 1;
+            }
+        }
+        _count
+    }
+    pub fn sum(&self) -> i32{
+        let mut _sum = 0;
+        for row in &self.data{
+            let _row_sum: i32 = row.iter().sum();
+            _sum += _row_sum;
+        }
+        _sum
     }
 
     // Method to push a new row into the 2D array
