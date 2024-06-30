@@ -19,14 +19,13 @@ pub fn p1(raw_input: &str) -> i32{
         .map(|line| corrupted_score(line, &points_table, &close_to_open_states))
         .sum();
 
-    println!("score: {}", score);
+    //println!("score: {}", score);
     score
 }
 
 fn corrupted_score(raw_line: &str, points_table: &HashMap<char, i32>, close_to_open_states: &HashMap<char, char>) -> i32{
     let mut open_states_queue = Vec::new();
-    let open_values = vec!['(', '[', '{', '<'];
-    let closing_values = vec![')', ']', '}', '>'];
+    let open_values: Vec<char> = close_to_open_states.values().cloned().collect();
     for char in raw_line.chars(){
         if open_values.contains(&char){
             // opening new state
@@ -35,25 +34,20 @@ fn corrupted_score(raw_line: &str, points_table: &HashMap<char, i32>, close_to_o
             // it has to be closing state
             let coresponding_open_state = close_to_open_states.get(&char).unwrap();
             let last_value_in_queue = open_states_queue[open_states_queue.len() - 1];
-
             if coresponding_open_state == &last_value_in_queue{
                 // its ok closing the corresponding open values
                 // remove last element from open_states_queue
                 open_states_queue.remove(open_states_queue.len() - 1);
             }else {
                 // problem - closing something that should not be closed!
-                let value =  points_table.get(&char).unwrap().clone();
-                //println!("Line {} is wrong, expected {}, but found {}", raw_line, last_value_in_queue, char);
-                return value
+                return points_table.get(&char).unwrap().clone() // todo: is clone necessary?
             }
 
-            //println!("dfad")
         }
 
     }
-    //println!("Line {} is fine :tada", raw_line);
+    //Line is fine :tada. Corrupted score is 0
     0
-
 }
 
 
@@ -85,15 +79,12 @@ pub fn p2(raw_input: &str) -> i64{
     score_per_line.sort();
 
     let result = score_per_line[(score_per_line.len() - 1)/2];
-
-
-    println!("score: {}", result);
     result
 }
 
 fn incomplete_score(raw_line: &str, points_table: &HashMap<char, i64>, close_to_open_states: &HashMap<char, char>, open_to_closed_states: &HashMap<char, char>) -> i64{
     let mut open_states_queue = Vec::new();
-    let open_values = vec!['(', '[', '{', '<'];
+    let open_values: Vec<char> = close_to_open_states.values().cloned().collect();
     for char in raw_line.chars(){
         if open_values.contains(&char){
             // opening new state
@@ -110,23 +101,16 @@ fn incomplete_score(raw_line: &str, points_table: &HashMap<char, i64>, close_to_
             }else {
                 // problem - closing something that should not be closed!
                 return 0 as i64
-                //let value =  points_table.get(&char).unwrap().clone();
-                //println!("Line {} is wrong, expected {}, but found {}", raw_line, last_value_in_queue, char);
-                //return (raw_line, value)
             }
-
-            //println!("dfad")
         }
 
     }
-    //println!("Line {} is fine :tada", raw_line);
     // line is incomplete, finish it:
     let mut missing_closing_states = Vec::new();
     for val in open_states_queue.iter().rev(){
         missing_closing_states.push(*open_to_closed_states.get(val).unwrap())
     }
     let score = _p2_score_per_line(&missing_closing_states, points_table);
-    //println!("missing values: {:?}, its score: {}", missing_closing_states, score);
     return score
 
 }
