@@ -49,6 +49,7 @@ pub fn print_day(day: u8, p1: f64, p2: f64) {
 
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Array2D {
     rows: usize,
     cols: usize,
@@ -127,13 +128,41 @@ impl Array2D {
         result
     }
 
+    pub fn get_8_neighbours_coor(&self, row: usize, col: usize) -> Vec<(usize, usize)>{
+        let mut result = self.get_4_neighbours_coor(row, col);
+        if row > 0{
+            if col > 0 {
+                result.push((row - 1, col - 1));
+            }
+            if col < self.cols - 1{
+                result.push((row - 1, col + 1))
+            }
+        }
+        if row < self.rows - 1{
+            if col > 0 {
+                result.push((row + 1, col - 1));
+            }
+            if col < self.cols - 1{
+                result.push((row + 1, col + 1))
+            }
+        }
+
+        result
+    }
+
+
     // Method to set a value at a specific position
-    fn set(&mut self, row: usize, col: usize, value: i32) -> Result<(), &'static str> {
+    pub fn set(&mut self, row: usize, col: usize, value: i32) -> Result<(), &'static str> {
         if row < self.rows && col < self.cols {
             self.data[row][col] = value;
             Ok(())
         } else {
             Err("Index out of bounds")
+        }
+    }
+    pub fn increase_by(&mut self, value: i32){
+        for (i, j) in (0..self.rows).cartesian_product(0..self.cols){
+            &self.set(i, j, self.get(i, j) + value);
         }
     }
 
@@ -182,4 +211,22 @@ impl Array2D {
             Err("Length of the new row does not match the number of columns")
         }
     }
+}
+
+
+pub fn parse_2d_input(raw_input: &str) -> Array2D{
+    const RADIX: u32 = 10;
+    let mut array_2d = Array2D::new(0, 0, 0);
+    for line in raw_input.lines(){
+        let mut vector: Vec<i32> = Vec::new();
+        for char in line.chars(){
+            let digit = char.to_digit(10).unwrap_or(0) as i32;
+            vector.push(digit);
+        }
+        array_2d.push(vector);
+        //array_2d.display();
+        //println!("solution");
+    }
+
+    array_2d
 }

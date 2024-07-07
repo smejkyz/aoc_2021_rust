@@ -1,10 +1,10 @@
 use ahash::HashSet;
 use bstr::ByteSlice;
-use crate::utils::{Array2D, print_day};
+use crate::utils::{Array2D, print_day, parse_2d_input};
 use itertools::Itertools;
 
 pub fn p1(raw_input: &str) -> i32 {
-    let input_matrx = parse_input(raw_input);
+    let input_matrx = parse_2d_input(raw_input);
     let low_points = find_low_points(&input_matrx);
     let result = low_points.iter().map(|(i, j) | input_matrx.get(*i, *j) + 1).sum();
     assert_eq!(result, 570); // 15 for test, 570 run
@@ -24,7 +24,7 @@ fn find_low_points(input_matrix: &Array2D) -> Vec<(usize, usize)>{
 }
 
 pub fn p2(raw_input: &str) -> i32 {
-    let input_matrx = parse_input(raw_input);
+    let input_matrx = parse_2d_input(raw_input);
     let low_points = find_low_points(&input_matrx);
     let mut basin_sizes: Vec<usize> = low_points
         .iter()
@@ -56,21 +56,4 @@ fn compute_basin_size(point: (usize, usize), input_matrix: &Array2D) -> usize{
         }
     }
     basin.len()
-}
-
-fn parse_input(raw_input: &str) -> Array2D{
-    const RADIX: u32 = 10;
-    let mut array_2d = Array2D::new(0, 0, 0);
-    for line in raw_input.lines(){
-        let mut vector: Vec<i32> = Vec::new();
-        for char in line.chars(){
-            let digit = char.to_digit(10).unwrap_or(0) as i32;
-            vector.push(digit);
-        }
-        array_2d.push(vector);
-        //array_2d.display();
-        //println!("solution");
-    }
-
-    array_2d
 }
