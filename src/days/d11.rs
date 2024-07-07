@@ -4,13 +4,11 @@ use crate::utils::{Array2D, parse_2d_input};
 
 pub fn p1(raw_input: &str) -> i32{
     let mut octopus_array = parse_2d_input(raw_input);
-    println!("it worsk : {:?}", octopus_array);
     let max_nb_steps = 100;
     let mut nb_flashes = 0;
-    for step_id in 0..max_nb_steps{
+    for _ in 0..max_nb_steps{
         let flashes_per_turn = perform_one_step(&mut octopus_array);
         nb_flashes = nb_flashes + flashes_per_turn;
-        println!("after {} steps nb flash: {}, octopus array: {:?}", step_id + 1, nb_flashes,  octopus_array);
     }
 
     nb_flashes
@@ -18,12 +16,10 @@ pub fn p1(raw_input: &str) -> i32{
 
 pub fn p2(raw_input: &str) -> i32{
     let mut octopus_array = parse_2d_input(raw_input);
-    println!("it worsk : {:?}", octopus_array);
     let mut step_id = 0;
     loop{
         let flashes_per_turn = perform_one_step(&mut octopus_array);
         step_id = step_id + 1;
-        println!("after {} steps nb flash: {}", step_id, flashes_per_turn);
         if flashes_per_turn == 10 * 10{
             break;
         }
@@ -51,9 +47,8 @@ fn perform_one_step(octopus_array: &mut Array2D) -> i32{
             }
         }
         octopus_that_flashes = find_octopus_that_flashes(&octopus_array, &already_flashed);
-        //println!("it worsk : {:?}", octopus_array);
     }
-    // count flash and
+    // count flash and set to zero 0
     let mut nb_flash = 0;
     for (i, j) in (0..octopus_array.get_rows()).cartesian_product(0..octopus_array.get_cols()) {
         if octopus_array.get(i, j) > 9{
@@ -63,6 +58,7 @@ fn perform_one_step(octopus_array: &mut Array2D) -> i32{
     }
     nb_flash
 }
+
 
 fn find_octopus_that_flashes(octopus_array: &Array2D, already_flashed: &Vec<(usize, usize)>) -> Vec<(usize, usize)>{
     let mut indices = Vec::new();
